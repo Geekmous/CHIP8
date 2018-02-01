@@ -1,12 +1,10 @@
 
 #include "chip.h"
 
-int main() {
+int main(int argc, const char * argv[]) {
 
-    chip8 chip;
-    chip.initialize();
-    chip.readROM("./invaders.c8");
-    chip.run();
+    initalize_OpenGL(argc, (char**)argv);
+    
 
     return 0;
 }

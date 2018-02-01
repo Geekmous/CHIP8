@@ -1,7 +1,14 @@
 #ifndef CHIP_H_
 #define CHIP_H_
 #include <cstdio>
+void refresh_screen();
+void onPerpareDraw();
+void initalize_OpenGL(int argc, char* argv[]);
+static unsigned char g[32 * 64] = {0};
+
+
 class chip8 {
+public:
     /*
      * 0x000 - 0x1FF chip8 interpreter
      * 0x050 - 0x0A0 charset from '0' to 'F'
@@ -10,9 +17,9 @@ class chip8 {
     unsigned char memory[4096];
 
     unsigned short PC;
-    unsigned char gfx[32 * 64];
-    unsigned char V[16];
 
+    unsigned char V[16];
+    unsigned char* gfx;
     unsigned short stack[16];
     unsigned short sp;
     unsigned char key[16];
@@ -37,12 +44,14 @@ class chip8 {
     void set_sound_timer(unsigned char value);
     void disp_clear();
     unsigned char get_key();
-    
-    void refresh_screen();
-    void onPerpareDraw();
+
+
 public:
     chip8();
     void initialize();
+    void setGFX(unsigned char** addr) {
+        gfx = *addr;
+    }
     void readROM(const char* path);
     void run();
     ~chip8();

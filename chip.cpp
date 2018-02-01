@@ -1,11 +1,70 @@
 #include "chip.h"
+#include <iostream>
 #include <ctime>
 #include <cstring>
 #include <unistd.h>
 #include <functional>
 #include <GLUT/GLUT.h>
+chip8 chip;
+void refresh_screen() {
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    chip.run();
+    unsigned char buf[32 * 64 * 3];
+    for (size_t i = 0; i < 32 * 64; i++) {
+        if (chip.gfx[i]) {
+            buf[i * 3] = 255;
+            buf[i * 3 + 1] = 255;
+            buf[i * 3 + 2] = 255;
+        } else {
+            buf[i * 3] = 0;
+            buf[i * 3 + 1] = 0;
+            buf[i * 3 + 2] = 0;
+        }
+    }
 
+    printf("Drawing\n\n\n");
+    glDrawPixels(64, 32, GL_RGB, GL_UNSIGNED_BYTE, buf);
+    glFlush();
+}
 
+void onPerpareDraw() {
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    unsigned char buf[32 * 64 * 3];
+    for (size_t i = 0; i < 32 * 64; i++) {
+        if (g[i]) {
+            buf[i * 3] = 255;
+            buf[i * 3 + 1] = 255;
+            buf[i * 3 + 2] = 255;
+        } else {
+            buf[i * 3] = 0;
+            buf[i * 3 + 1] = 0;
+            buf[i * 3 + 2] = 0;
+        }
+    }
+
+    glDrawPixels(64, 32, GL_RGB, GL_UNSIGNED_BYTE, buf);
+    glFlush();
+}
+
+void initalize_OpenGL(int argc, char* argv[]) {
+    //initalize opengl
+
+    chip.initialize();
+    chip.readROM("./invaders.c8");
+    unsigned char* t = g;
+    chip.setGFX(&t);
+    glutInit(&argc, (char**)argv);
+    //glutInitDisplayMode(GLUT_RGB |GLUT_DOUBLE);
+    glutInitWindowPosition(100, 100);
+    glutInitWindowSize(64, 32);
+    glutCreateWindow("CHIP8");
+    glutDisplayFunc(&onPerpareDraw);
+    glutIdleFunc(&refresh_screen);
+    glutMainLoop();
+    
+}
 chip8::chip8() {
     sp = 0;
     delay_timer = 60;
@@ -45,17 +104,7 @@ void chip8::initialize() {
     logging = fopen("./log.txt", "w");
 
 
-    //initalize opengl
-    glutInit(0, NULL);
-    glutInitDisplayMode(GLUT_RGB |GLUT_DOUBLE);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(400, 400);
-    glutCreateWindow("CHIP8");
 
-    std::function<void()> disp = std::bind(&chip8::onPerpareDraw, this);
-    glutDisplayFunc(&disp);
-    //glutIdleFunc()
-    glutMainLoop();
 }
 
 void chip8::readROM(const char* path) {
@@ -90,8 +139,8 @@ void chip8::run() {
             break;
         }
         if (drawFlag) {
-            refresh_screen();
             drawFlag = false;
+            return;
         }
         if (delay_timer > 0)
             delay_timer--;
@@ -334,6 +383,12 @@ void chip8::machineCicle() {
         for (int i = 0; i < 0x10; i++) {
             fprintf(logging, "STACK[%d] = 0x%x\n", i, stack[i]);
         }
+        for (int i = 0; i < 32; i++) {
+            for(int j = 0; j < 64; j++) {
+                fprintf(logging, "%d", gfx[i * 64 + j]);
+            }
+            fprintf(logging, "\n");
+        }
         fprintf(logging, "PC: 0x%x\n", PC);
         fprintf(logging, "I: 0x%x\n", I);
 
@@ -373,8 +428,4 @@ void chip8::disp_clear() {
 
 unsigned char chip8::get_key() {
     return 0xA;
-}
-
-void chip8::refresh_screen() {
-
 }
